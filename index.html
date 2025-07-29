@@ -42,6 +42,38 @@
 
           // Carica il dizionario all'avvio
           useEffect(() => {
+            // URL del dizionario su GitHub
+            // Sostituisci con il tuo URL quando carichi il file
+            const urlDizionario = 'https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane/60000_parole_italiane.txt';
+            
+            // Prova a caricare dal GitHub
+            fetch(urlDizionario)
+              .then(response => {
+                if (!response.ok) throw new Error('Errore nel caricamento');
+                return response.text();
+              })
+              .then(text => {
+                const parole = text.split('\n')
+                  .map(p => p.trim().toLowerCase())
+                  .filter(p => p && p.length >= 3 && p >= 'abaco' && p <= 'zuzzurellone')
+                  .sort();
+                
+                if (parole.length > 0) {
+                  setDizionario(parole);
+                  setCaricamentoDizionario(false);
+                  setMessaggio(`Dizionario caricato: ${parole.length} parole disponibili`);
+                } else {
+                  throw new Error('Nessuna parola valida trovata');
+                }
+              })
+              .catch(error => {
+                console.error('Errore caricamento dizionario:', error);
+                // Usa il dizionario demo se il caricamento fallisce
+                usaDizionarioDemo();
+              });
+          }, []);
+
+          const usaDizionarioDemo = () => {
             // Dizionario demo con 20 parole
             const dizionarioDemo = [
               'abaco', 'albero', 'amore', 'barca', 'casa',
@@ -52,8 +84,8 @@
             
             setDizionario(dizionarioDemo);
             setCaricamentoDizionario(false);
-            setMessaggio('Modalità demo: 20 parole disponibili');
-          }, []);
+            setMessaggio('Modalità demo: 20 parole disponibili (dizionario online non disponibile)');
+          };
 
           // Inizia il gioco contro il computer
           const iniziaGiocoComputer = () => {
@@ -183,6 +215,7 @@
                   <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl text-center">
                     <p className="text-2xl mb-4">⏳</p>
                     <p>Caricamento dizionario...</p>
+                    <p className="text-sm mt-2 opacity-70">Scaricamento parole italiane in corso...</p>
                   </div>
                 ) : !modalita ? (
                   <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
