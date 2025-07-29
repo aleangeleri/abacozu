@@ -14,7 +14,7 @@
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
         function AbacoZuzzurellone() {
           const [modalita, setModalita] = useState(null);
@@ -26,27 +26,73 @@
           const [messaggio, setMessaggio] = useState('');
           const [giocatore, setGiocatore] = useState(1);
           const [numeroGiocatori, setNumeroGiocatori] = useState(2);
+          const [nomiGiocatori, setNomiGiocatori] = useState({});
+          const [setupNomi, setSetupNomi] = useState(false);
           const [turnoOrganizzatore, setTurnoOrganizzatore] = useState(false);
           const [vittoria, setVittoria] = useState(false);
           const [dizionario, setDizionario] = useState([]);
           const [caricamentoDizionario, setCaricamentoDizionario] = useState(true);
+          const [numeroTentativi, setNumeroTentativi] = useState(0);
+          const [tempoInizio, setTempoInizio] = useState(null);
+          const [tempoTrascorso, setTempoTrascorso] = useState(0);
+          const intervalRef = useRef(null);
+
+          // Timer
+          useEffect(() => {
+            if (tempoInizio && !vittoria) {
+              intervalRef.current = setInterval(() => {
+                setTempoTrascorso(Math.floor((Date.now() - tempoInizio) / 1000));
+              }, 1000);
+            } else {
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+              }
+            }
+            return () => {
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+              }
+            };
+          }, [tempoInizio, vittoria]);
+
+          // Formatta il tempo in mm:ss
+          const formatTempo = (secondi) => {
+            const min = Math.floor(secondi / 60);
+            const sec = secondi % 60;
+            return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+          };
 
           // Funzione per validare una parola
           const parolaValida = (parola) => {
             const parolaNormalizzata = parola.trim().toLowerCase();
-            return dizionario.includes(parolaNormalizzata) && 
-                   parolaNormalizzata.length >= 3 &&
-                   parolaNormalizzata >= 'abaco' && 
-                   parolaNormalizzata <= 'zuzzurellone';
+            
+            // Controlla se è nel dizionario
+            if (!dizionario.includes(parolaNormalizzata)) {
+              return { valida: false, errore: 'Parola non presente nel dizionario italiano!' };
+            }
+            
+            // Controlla la lunghezza
+            if (parolaNormalizzata.length < 3) {
+              return { valida: false, errore: 'La parola deve avere almeno 3 lettere!' };
+            }
+            
+            // Controlla se è nei limiti alfabetici generali
+            if (parolaNormalizzata < 'abaco' || parolaNormalizzata > 'zuzzurellone') {
+              return { valida: false, errore: 'La parola deve essere tra "abaco" e "zuzzurellone"!' };
+            }
+            
+            // Controlla se è nei limiti attuali del gioco
+            if (parolaNormalizzata < limiteInferiore || parolaNormalizzata > limiteSuperiore) {
+              return { valida: false, errore: `La parola deve essere tra "${limiteInferiore}" e "${limiteSuperiore}"!` };
+            }
+            
+            return { valida: true };
           };
 
           // Carica il dizionario all'avvio
           useEffect(() => {
-            // URL del dizionario su GitHub
-            // Sostituisci con il tuo URL quando carichi il file
-            const urlDizionario = 'https://raw.githubusercontent.com/aleangeleri/abacozu/refs/heads/main/dizionario_italiano.txt';
+            const urlDizionario = 'https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane/60000_parole_italiane.txt';
             
-            // Prova a caricare dal GitHub
             fetch(urlDizionario)
               .then(response => {
                 if (!response.ok) throw new Error('Errore nel caricamento');
@@ -68,13 +114,11 @@
               })
               .catch(error => {
                 console.error('Errore caricamento dizionario:', error);
-                // Usa il dizionario demo se il caricamento fallisce
                 usaDizionarioDemo();
               });
           }, []);
 
           const usaDizionarioDemo = () => {
-            // Dizionario demo con 20 parole
             const dizionarioDemo = [
               'abaco', 'albero', 'amore', 'barca', 'casa',
               'dolce', 'fiore', 'gatto', 'libro', 'mare',
@@ -96,11 +140,20 @@
             setLimiteSuperiore('zuzzurellone');
             setStoricoTentativi([]);
             setVittoria(false);
+            setNumeroTentativi(0);
+            setTempoInizio(Date.now());
+            setTempoTrascorso(0);
             setMessaggio('Ho scelto una parola. Prova a indovinarla!');
           };
 
           // Inizia il gioco con amici
           const iniziaGiocoAmici = () => {
+            if (!setupNomi) {
+              setSetupNomi(true);
+              setMessaggio('Inserisci i nomi dei giocatori');
+              return;
+            }
+            
             setModalita('amici');
             setTurnoOrganizzatore(true);
             setLimiteInferiore('abaco');
@@ -108,7 +161,27 @@
             setStoricoTentativi([]);
             setVittoria(false);
             setGiocatore(1);
+            setNumeroTentativi(0);
             setMessaggio('Organizzatore: inserisci la parola segreta');
+          };
+
+          // Conferma i nomi dei giocatori
+          const confermaNomi = () => {
+            let tuttiNomiInseriti = true;
+            for (let i = 1; i <= numeroGiocatori; i++) {
+              if (!nomiGiocatori[i] || nomiGiocatori[i].trim() === '') {
+                tuttiNomiInseriti = false;
+                break;
+              }
+            }
+            
+            if (!tuttiNomiInseriti) {
+              setMessaggio('Inserisci tutti i nomi dei giocatori!');
+              return;
+            }
+            
+            setSetupNomi(false);
+            iniziaGiocoAmici();
           };
 
           // Gestisce il tentativo
@@ -120,20 +193,25 @@
               return;
             }
 
-            if (!parolaValida(tentativo)) {
-              setMessaggio('Parola non valida! Deve essere presente nel dizionario italiano.');
+            const validazione = parolaValida(tentativo);
+            if (!validazione.valida) {
+              setMessaggio(validazione.errore);
               return;
             }
 
+            setNumeroTentativi(numeroTentativi + 1);
+
             if (tentativo === parolaSegreta) {
               setVittoria(true);
+              const nomeGiocatore = modalita === 'amici' ? (nomiGiocatori[giocatore] || `Giocatore ${giocatore}`) : 'Tu';
+              
               if (modalita === 'computer') {
-                setMessaggio(`🎉 Complimenti! Hai indovinato la parola "${parolaSegreta}"!`);
+                setMessaggio(`🎉 Complimenti! Hai indovinato la parola "${parolaSegreta}" in ${numeroTentativi + 1} tentativi e ${formatTempo(tempoTrascorso)}!`);
               } else {
-                setMessaggio(`🎉 Il giocatore ${giocatore} ha indovinato! La parola era "${parolaSegreta}"!`);
+                setMessaggio(`🎉 ${nomeGiocatore} ha indovinato! La parola era "${parolaSegreta}"!`);
               }
               setStoricoTentativi([...storicotentative, { 
-                giocatore: modalita === 'amici' ? giocatore : 'Tu', 
+                giocatore: nomeGiocatore, 
                 tentativo, 
                 risultato: 'CORRETTA!' 
               }]);
@@ -152,8 +230,10 @@
 
               setLimiteInferiore(nuovoLimiteInf);
               setLimiteSuperiore(nuovoLimiteSup);
+              
+              const nomeGiocatore = modalita === 'amici' ? (nomiGiocatori[giocatore] || `Giocatore ${giocatore}`) : 'Tu';
               setStoricoTentativi([...storicotentative, { 
-                giocatore: modalita === 'amici' ? `Giocatore ${giocatore}` : 'Tu', 
+                giocatore: nomeGiocatore, 
                 tentativo, 
                 risultato 
               }]);
@@ -161,7 +241,8 @@
               if (modalita === 'amici') {
                 const prossimoGiocatore = giocatore % numeroGiocatori + 1;
                 setGiocatore(prossimoGiocatore);
-                setMessaggio(`Turno del giocatore ${prossimoGiocatore}`);
+                const nomeProssimo = nomiGiocatori[prossimoGiocatore] || `Giocatore ${prossimoGiocatore}`;
+                setMessaggio(`Turno di ${nomeProssimo}`);
               } else {
                 setMessaggio(risultato);
               }
@@ -179,15 +260,19 @@
               return;
             }
 
-            if (!parolaValida(parola)) {
-              setMessaggio('La parola deve essere presente nel dizionario italiano!');
+            const validazione = parolaValida(parola);
+            if (!validazione.valida) {
+              setMessaggio(validazione.errore);
               return;
             }
 
             setParolaSegreta(parola);
             setTurnoOrganizzatore(false);
             setTentativoCorrente('');
-            setMessaggio(`Parola segreta impostata! Turno del giocatore 1`);
+            setTempoInizio(Date.now());
+            setTempoTrascorso(0);
+            const nomePrimo = nomiGiocatori[1] || 'Giocatore 1';
+            setMessaggio(`Parola segreta impostata! Turno di ${nomePrimo}`);
           };
 
           // Resetta il gioco
@@ -202,6 +287,10 @@
             setGiocatore(1);
             setTurnoOrganizzatore(false);
             setVittoria(false);
+            setNumeroTentativi(0);
+            setTempoInizio(null);
+            setTempoTrascorso(0);
+            setSetupNomi(false);
           };
 
           return (
@@ -216,6 +305,45 @@
                     <p className="text-2xl mb-4">⏳</p>
                     <p>Caricamento dizionario...</p>
                     <p className="text-sm mt-2 opacity-70">Scaricamento parole italiane in corso...</p>
+                  </div>
+                ) : setupNomi ? (
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
+                    <h2 className="text-xl font-semibold mb-6 text-center">Nomi dei giocatori</h2>
+                    
+                    {messaggio && (
+                      <div className="mb-4 p-3 bg-blue-500/30 rounded-lg text-center text-sm">
+                        {messaggio}
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      {[...Array(numeroGiocatori)].map((_, i) => (
+                        <div key={i + 1}>
+                          <label className="block text-sm mb-1">Giocatore {i + 1}:</label>
+                          <input
+                            type="text"
+                            value={nomiGiocatori[i + 1] || ''}
+                            onChange={(e) => setNomiGiocatori({...nomiGiocatori, [i + 1]: e.target.value})}
+                            placeholder={`Nome giocatore ${i + 1}`}
+                            className="w-full p-2 rounded bg-white/20 border border-white/30 text-white"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={confermaNomi}
+                      className="w-full mt-4 bg-green-500 hover:bg-green-600 p-3 rounded-lg font-semibold transition-colors"
+                    >
+                      Conferma nomi e inizia
+                    </button>
+                    
+                    <button
+                      onClick={resetGioco}
+                      className="w-full mt-2 bg-gray-500 hover:bg-gray-600 p-2 rounded-lg text-sm transition-colors"
+                    >
+                      Annulla
+                    </button>
                   </div>
                 ) : !modalita ? (
                   <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
@@ -275,6 +403,20 @@
                       </button>
                     </div>
 
+                    {/* Statistiche di gioco */}
+                    {tempoInizio && !turnoOrganizzatore && (
+                      <div className="flex justify-around mb-4 text-center">
+                        <div className="bg-white/10 rounded-lg p-2">
+                          <p className="text-xs opacity-70">Tentativi</p>
+                          <p className="text-lg font-bold">{numeroTentativi}</p>
+                        </div>
+                        <div className="bg-white/10 rounded-lg p-2">
+                          <p className="text-xs opacity-70">Tempo</p>
+                          <p className="text-lg font-bold">{formatTempo(tempoTrascorso)}</p>
+                        </div>
+                      </div>
+                    )}
+
                     {!vittoria && (
                       <div className="mb-6 p-4 bg-white/10 rounded-lg">
                         <p className="text-sm mb-2">La parola è compresa tra:</p>
@@ -316,7 +458,7 @@
                               value={tentativoCorrente}
                               onChange={(e) => setTentativoCorrente(e.target.value)}
                               onKeyPress={(e) => e.key === 'Enter' && gestisciTentativo()}
-                              placeholder={modalita === 'amici' ? `Giocatore ${giocatore}, inserisci una parola...` : 'Inserisci una parola...'}
+                              placeholder={modalita === 'amici' ? `${nomiGiocatori[giocatore] || `Giocatore ${giocatore}`}, inserisci una parola...` : 'Inserisci una parola...'}
                               className="w-full p-3 rounded-lg bg-white/20 border border-white/30 placeholder-white/50 mb-3 text-white"
                             />
                             <button
@@ -345,7 +487,7 @@
 
                     {vittoria && (
                       <button
-                        onClick={modalita === 'computer' ? iniziaGiocoComputer : iniziaGiocoAmici}
+                        onClick={modalita === 'computer' ? iniziaGiocoComputer : () => {setSetupNomi(true); setNomiGiocatori({})}}
                         className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-black p-3 rounded-lg font-semibold transition-colors"
                       >
                         Gioca ancora!
