@@ -4,367 +4,339 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Abaco Zuzzurellone</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://unpkg.com/lucide@latest/dist/lucide.css">
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        import React, { useState, useEffect } from 'react';
-import { ChevronRight, Users, Smartphone, RefreshCw, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+        const { useState, useEffect } = React;
+        const { ChevronRight, Users, Smartphone, RefreshCw, AlertCircle, Loader } = lucide;
 
-const AbacoZuzzurellone = () => {
-  const [modalita, setModalita] = useState(null);
-  const [parolaSegreta, setParolaSegreta] = useState('');
-  const [limiteInferiore, setLimiteInferiore] = useState('abaco');
-  const [limiteSuperiore, setLimiteSuperiore] = useState('zuzzurellone');
-  const [tentativoCorrente, setTentativoCorrente] = useState('');
-  const [storicotentative, setStoricoTentativi] = useState([]);
-  const [messaggio, setMessaggio] = useState('');
-  const [giocatore, setGiocatore] = useState(1);
-  const [numeroGiocatori, setNumeroGiocatori] = useState(2);
-  const [turnoOrganizzatore, setTurnoOrganizzatore] = useState(false);
-  const [vittoria, setVittoria] = useState(false);
-  const [dizionario, setDizionario] = useState([]);
-  const [caricamentoDizionario, setCaricamentoDizionario] = useState(true);
+        const AbacoZuzzurellone = () => {
+          const [modalita, setModalita] = useState(null);
+          const [parolaSegreta, setParolaSegreta] = useState('');
+          const [limiteInferiore, setLimiteInferiore] = useState('abaco');
+          const [limiteSuperiore, setLimiteSuperiore] = useState('zuzzurellone');
+          const [tentativoCorrente, setTentativoCorrente] = useState('');
+          const [storicotentative, setStoricoTentativi] = useState([]);
+          const [messaggio, setMessaggio] = useState('');
+          const [giocatore, setGiocatore] = useState(1);
+          const [numeroGiocatori, setNumeroGiocatori] = useState(2);
+          const [turnoOrganizzatore, setTurnoOrganizzatore] = useState(false);
+          const [vittoria, setVittoria] = useState(false);
+          const [dizionario, setDizionario] = useState([]);
+          const [caricamentoDizionario, setCaricamentoDizionario] = useState(true);
 
-  // Funzione per validare una parola
-  const parolaValida = (parola) => {
-    const parolaNormalizzata = parola.trim().toLowerCase();
-    return dizionario.includes(parolaNormalizzata) && 
-           parolaNormalizzata.length >= 3 &&
-           parolaNormalizzata >= 'abaco' && 
-           parolaNormalizzata <= 'zuzzurellone';
-  };
+          // Funzione per validare una parola
+          const parolaValida = (parola) => {
+            const parolaNormalizzata = parola.trim().toLowerCase();
+            return dizionario.includes(parolaNormalizzata) && 
+                   parolaNormalizzata.length >= 3 &&
+                   parolaNormalizzata >= 'abaco' && 
+                   parolaNormalizzata <= 'zuzzurellone';
+          };
 
-  // Simula il caricamento del dizionario all'avvio dell'app
-  useEffect(() => {
-    const caricaDizionarioDaFile = async () => {
-      try {
-        // In un'app reale, questo sarebbe un file incluso negli asset dell'app
-        // Per questa demo, usiamo window.fs.readFile se disponibile
-        if (window.fs && window.fs.readFile) {
-          try {
-            const contenuto = await window.fs.readFile('dizionario_italiano.txt', { encoding: 'utf8' });
-            const parole = contenuto.split('\n')
-              .map(parola => parola.trim().toLowerCase())
-              .filter(parola => 
-                parola.length >= 3 && 
-                parola >= 'abaco' && 
-                parola <= 'zuzzurellone'
-              )
-              .sort();
+          // Simula il caricamento del dizionario all'avvio dell'app
+          useEffect(() => {
+            // Usa dizionario demo
+            const dizionarioDemo = [
+              'abaco', 'albero', 'amore', 'barca', 'casa',
+              'dolce', 'fiore', 'gatto', 'libro', 'mare',
+              'notte', 'pane', 'rosa', 'sole', 'terra',
+              'uomo', 'vino', 'voce', 'zappa', 'zucchero'
+            ];
             
-            setDizionario(parole);
+            setDizionario(dizionarioDemo);
             setCaricamentoDizionario(false);
-            setMessaggio(`Dizionario caricato: ${parole.length} parole disponibili`);
-          } catch (error) {
-            // Se il file non esiste, usa un dizionario di demo
-            usaDizionarioDemo();
-          }
-        } else {
-          // Usa dizionario demo se fs non è disponibile
-          usaDizionarioDemo();
-        }
-      } catch (error) {
-        usaDizionarioDemo();
-      }
-    };
+            setMessaggio('Modalità demo: 20 parole disponibili');
+          }, []);
 
-    const usaDizionarioDemo = () => {
-      // Dizionario demo con 20 parole comuni italiane
-      const dizionarioDemo = [
-        'abaco', 'albero', 'amore', 'barca', 'casa',
-        'dolce', 'fiore', 'gatto', 'libro', 'mare',
-        'notte', 'pane', 'rosa', 'sole', 'terra',
-        'uomo', 'vino', 'voce', 'zappa', 'zucchero'
-      ];
-      
-      setDizionario(dizionarioDemo);
-      setCaricamentoDizionario(false);
-      setMessaggio('Modalità demo: 20 parole disponibili');
-    };
+          // Funzione per iniziare il gioco contro il computer
+          const iniziaGiocoComputer = () => {
+            const parolaRandom = dizionario[Math.floor(Math.random() * dizionario.length)];
+            setParolaSegreta(parolaRandom);
+            setModalita('computer');
+            setLimiteInferiore('abaco');
+            setLimiteSuperiore('zuzzurellone');
+            setStoricoTentativi([]);
+            setVittoria(false);
+            setMessaggio('Ho scelto una parola. Prova a indovinarla!');
+          };
 
-    caricaDizionarioDaFile();
-  }, []);
+          // Funzione per iniziare il gioco con amici
+          const iniziaGiocoAmici = () => {
+            setModalita('amici');
+            setTurnoOrganizzatore(true);
+            setLimiteInferiore('abaco');
+            setLimiteSuperiore('zuzzurellone');
+            setStoricoTentativi([]);
+            setVittoria(false);
+            setGiocatore(1);
+            setMessaggio('Organizzatore: inserisci la parola segreta');
+          };
 
-  // Funzione per iniziare il gioco contro il computer
-  const iniziaGiocoComputer = () => {
-    const parolaRandom = dizionario[Math.floor(Math.random() * dizionario.length)];
-    setParolaSegreta(parolaRandom);
-    setModalita('computer');
-    setLimiteInferiore('abaco');
-    setLimiteSuperiore('zuzzurellone');
-    setStoricoTentativi([]);
-    setVittoria(false);
-    setMessaggio('Ho scelto una parola. Prova a indovinarla!');
-  };
-
-  // Funzione per iniziare il gioco con amici
-  const iniziaGiocoAmici = () => {
-    setModalita('amici');
-    setTurnoOrganizzatore(true);
-    setLimiteInferiore('abaco');
-    setLimiteSuperiore('zuzzurellone');
-    setStoricoTentativi([]);
-    setVittoria(false);
-    setGiocatore(1);
-    setMessaggio('Organizzatore: inserisci la parola segreta');
-  };
-
-  // Funzione per gestire il tentativo
-  const gestisciTentativo = () => {
-    const tentativo = tentativoCorrente.trim().toLowerCase();
-    
-    if (!tentativo) {
-      setMessaggio('Inserisci una parola!');
-      return;
-    }
-
-    if (!parolaValida(tentativo)) {
-      setMessaggio('Parola non valida! Deve essere presente nel dizionario italiano.');
-      return;
-    }
-
-    if (tentativo === parolaSegreta) {
-      setVittoria(true);
-      if (modalita === 'computer') {
-        setMessaggio(`🎉 Complimenti! Hai indovinato la parola "${parolaSegreta}"!`);
-      } else {
-        setMessaggio(`🎉 Il giocatore ${giocatore} ha indovinato! La parola era "${parolaSegreta}"!`);
-      }
-      setStoricoTentativi([...storicotentative, { 
-        giocatore: modalita === 'amici' ? giocatore : 'Tu', 
-        tentativo, 
-        risultato: 'CORRETTA!' 
-      }]);
-    } else {
-      let nuovoLimiteInf = limiteInferiore;
-      let nuovoLimiteSup = limiteSuperiore;
-      let risultato = '';
-
-      if (tentativo < parolaSegreta) {
-        nuovoLimiteInf = tentativo;
-        risultato = `La parola è tra "${tentativo}" e "${limiteSuperiore}"`;
-      } else {
-        nuovoLimiteSup = tentativo;
-        risultato = `La parola è tra "${limiteInferiore}" e "${tentativo}"`;
-      }
-
-      setLimiteInferiore(nuovoLimiteInf);
-      setLimiteSuperiore(nuovoLimiteSup);
-      setStoricoTentativi([...storicotentative, { 
-        giocatore: modalita === 'amici' ? `Giocatore ${giocatore}` : 'Tu', 
-        tentativo, 
-        risultato 
-      }]);
-      
-      if (modalita === 'amici') {
-        const prossimoGiocatore = giocatore % numeroGiocatori + 1;
-        setGiocatore(prossimoGiocatore);
-        setMessaggio(`Turno del giocatore ${prossimoGiocatore}`);
-      } else {
-        setMessaggio(risultato);
-      }
-    }
-
-    setTentativoCorrente('');
-  };
-
-  // Funzione per impostare la parola segreta (modalità amici)
-  const impostaParolaSegreta = () => {
-    const parola = tentativoCorrente.trim().toLowerCase();
-    
-    if (!parola || parola.length < 3) {
-      setMessaggio('La parola deve avere almeno 3 lettere!');
-      return;
-    }
-
-    if (!parolaValida(parola)) {
-      setMessaggio('La parola deve essere presente nel dizionario italiano!');
-      return;
-    }
-
-    setParolaSegreta(parola);
-    setTurnoOrganizzatore(false);
-    setTentativoCorrente('');
-    setMessaggio(`Parola segreta impostata! Turno del giocatore 1`);
-  };
-
-  // Funzione per resettare il gioco
-  const resetGioco = () => {
-    setModalita(null);
-    setParolaSegreta('');
-    setLimiteInferiore('abaco');
-    setLimiteSuperiore('zuzzurellone');
-    setTentativoCorrente('');
-    setStoricoTentativi([]);
-    setMessaggio('');
-    setGiocatore(1);
-    setTurnoOrganizzatore(false);
-    setVittoria(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4">
-      <div className="max-w-md mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8 text-yellow-300 drop-shadow-lg">
-          Abaco Zuzzurellone
-        </h1>
-
-        {caricamentoDizionario ? (
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl text-center">
-            <Loader className="animate-spin mx-auto mb-4" size={48} />
-            <p>Caricamento dizionario...</p>
-          </div>
-        ) : !modalita ? (
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-xl font-semibold mb-6 text-center">Scegli la modalità di gioco</h2>
+          // Funzione per gestire il tentativo
+          const gestisciTentativo = () => {
+            const tentativo = tentativoCorrente.trim().toLowerCase();
             
-            {messaggio && (
-              <div className="mb-4 p-3 bg-blue-500/30 rounded-lg text-center text-sm">
-                {messaggio}
-              </div>
-            )}
+            if (!tentativo) {
+              setMessaggio('Inserisci una parola!');
+              return;
+            }
 
-            <button
-              onClick={iniziaGiocoComputer}
-              className="w-full mb-4 bg-blue-500 hover:bg-blue-600 p-4 rounded-lg flex items-center justify-between transition-all transform hover:scale-105"
-            >
-              <div className="flex items-center">
-                <Smartphone className="mr-3" size={24} />
-                <span className="text-lg font-semibold">Gioca contro il Computer</span>
-              </div>
-              <ChevronRight size={24} />
-            </button>
+            if (!parolaValida(tentativo)) {
+              setMessaggio('Parola non valida! Deve essere presente nel dizionario italiano.');
+              return;
+            }
 
-            <button
-              onClick={iniziaGiocoAmici}
-              className="w-full bg-green-500 hover:bg-green-600 p-4 rounded-lg flex items-center justify-between transition-all transform hover:scale-105"
-            >
-              <div className="flex items-center">
-                <Users className="mr-3" size={24} />
-                <span className="text-lg font-semibold">Gioca con Amici</span>
-              </div>
-              <ChevronRight size={24} />
-            </button>
+            if (tentativo === parolaSegreta) {
+              setVittoria(true);
+              if (modalita === 'computer') {
+                setMessaggio(`🎉 Complimenti! Hai indovinato la parola "${parolaSegreta}"!`);
+              } else {
+                setMessaggio(`🎉 Il giocatore ${giocatore} ha indovinato! La parola era "${parolaSegreta}"!`);
+              }
+              setStoricoTentativi([...storicotentative, { 
+                giocatore: modalita === 'amici' ? giocatore : 'Tu', 
+                tentativo, 
+                risultato: 'CORRETTA!' 
+              }]);
+            } else {
+              let nuovoLimiteInf = limiteInferiore;
+              let nuovoLimiteSup = limiteSuperiore;
+              let risultato = '';
 
-            {modalita === null && (
-              <div className="mt-4">
-                <label className="block text-sm mb-2">Numero di giocatori (escluso l'organizzatore):</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={numeroGiocatori}
-                  onChange={(e) => setNumeroGiocatori(parseInt(e.target.value) || 2)}
-                  className="w-full p-2 rounded bg-white/20 border border-white/30 text-white"
-                />
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">
-                {modalita === 'computer' ? '🤖 Contro il Computer' : '👥 Con Amici'}
-              </h2>
-              <button
-                onClick={resetGioco}
-                className="bg-red-500 hover:bg-red-600 p-2 rounded-lg transition-colors"
-              >
-                <RefreshCw size={20} />
-              </button>
-            </div>
+              if (tentativo < parolaSegreta) {
+                nuovoLimiteInf = tentativo;
+                risultato = `La parola è tra "${tentativo}" e "${limiteSuperiore}"`;
+              } else {
+                nuovoLimiteSup = tentativo;
+                risultato = `La parola è tra "${limiteInferiore}" e "${tentativo}"`;
+              }
 
-            {!vittoria && (
-              <div className="mb-6 p-4 bg-white/10 rounded-lg">
-                <p className="text-sm mb-2">La parola è compresa tra:</p>
-                <p className="text-xl font-bold text-yellow-300">
-                  "{limiteInferiore}" e "{limiteSuperiore}"
-                </p>
-              </div>
-            )}
+              setLimiteInferiore(nuovoLimiteInf);
+              setLimiteSuperiore(nuovoLimiteSup);
+              setStoricoTentativi([...storicotentative, { 
+                giocatore: modalita === 'amici' ? `Giocatore ${giocatore}` : 'Tu', 
+                tentativo, 
+                risultato 
+              }]);
+              
+              if (modalita === 'amici') {
+                const prossimoGiocatore = giocatore % numeroGiocatori + 1;
+                setGiocatore(prossimoGiocatore);
+                setMessaggio(`Turno del giocatore ${prossimoGiocatore}`);
+              } else {
+                setMessaggio(risultato);
+              }
+            }
 
-            {messaggio && (
-              <div className={`mb-4 p-3 rounded-lg ${vittoria ? 'bg-green-500/30' : 'bg-blue-500/30'}`}>
-                <p className="text-center">{messaggio}</p>
-              </div>
-            )}
+            setTentativoCorrente('');
+          };
 
-            {!vittoria && (
-              <div className="mb-6">
-                {modalita === 'amici' && turnoOrganizzatore ? (
-                  <>
-                    <input
-                      type="password"
-                      value={tentativoCorrente}
-                      onChange={(e) => setTentativoCorrente(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && impostaParolaSegreta()}
-                      placeholder="Inserisci la parola segreta..."
-                      className="w-full p-3 rounded-lg bg-white/20 border border-white/30 placeholder-white/50 mb-3 text-white"
-                    />
+          // Funzione per impostare la parola segreta (modalità amici)
+          const impostaParolaSegreta = () => {
+            const parola = tentativoCorrente.trim().toLowerCase();
+            
+            if (!parola || parola.length < 3) {
+              setMessaggio('La parola deve avere almeno 3 lettere!');
+              return;
+            }
+
+            if (!parolaValida(parola)) {
+              setMessaggio('La parola deve essere presente nel dizionario italiano!');
+              return;
+            }
+
+            setParolaSegreta(parola);
+            setTurnoOrganizzatore(false);
+            setTentativoCorrente('');
+            setMessaggio(`Parola segreta impostata! Turno del giocatore 1`);
+          };
+
+          // Funzione per resettare il gioco
+          const resetGioco = () => {
+            setModalita(null);
+            setParolaSegreta('');
+            setLimiteInferiore('abaco');
+            setLimiteSuperiore('zuzzurellone');
+            setTentativoCorrente('');
+            setStoricoTentativi([]);
+            setMessaggio('');
+            setGiocatore(1);
+            setTurnoOrganizzatore(false);
+            setVittoria(false);
+          };
+
+          // Icone (uso emoji come fallback)
+          const ChevronRightIcon = () => <span>›</span>;
+          const SmartphoneIcon = () => <span>📱</span>;
+          const UsersIcon = () => <span>👥</span>;
+          const RefreshIcon = () => <span>🔄</span>;
+          const LoaderIcon = () => <span>⏳</span>;
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4">
+              <div className="max-w-md mx-auto">
+                <h1 className="text-3xl font-bold text-center mb-8 text-yellow-300 drop-shadow-lg">
+                  Abaco Zuzzurellone
+                </h1>
+
+                {caricamentoDizionario ? (
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl text-center">
+                    <LoaderIcon />
+                    <p>Caricamento dizionario...</p>
+                  </div>
+                ) : !modalita ? (
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
+                    <h2 className="text-xl font-semibold mb-6 text-center">Scegli la modalità di gioco</h2>
+                    
+                    {messaggio && (
+                      <div className="mb-4 p-3 bg-blue-500/30 rounded-lg text-center text-sm">
+                        {messaggio}
+                      </div>
+                    )}
+
                     <button
-                      onClick={impostaParolaSegreta}
-                      className="w-full bg-purple-500 hover:bg-purple-600 p-3 rounded-lg font-semibold transition-colors"
+                      onClick={iniziaGiocoComputer}
+                      className="w-full mb-4 bg-blue-500 hover:bg-blue-600 p-4 rounded-lg flex items-center justify-between transition-all transform hover:scale-105"
                     >
-                      Imposta Parola Segreta
+                      <div className="flex items-center">
+                        <SmartphoneIcon />
+                        <span className="text-lg font-semibold ml-3">Gioca contro il Computer</span>
+                      </div>
+                      <ChevronRightIcon />
                     </button>
-                  </>
+
+                    <button
+                      onClick={iniziaGiocoAmici}
+                      className="w-full bg-green-500 hover:bg-green-600 p-4 rounded-lg flex items-center justify-between transition-all transform hover:scale-105"
+                    >
+                      <div className="flex items-center">
+                        <UsersIcon />
+                        <span className="text-lg font-semibold ml-3">Gioca con Amici</span>
+                      </div>
+                      <ChevronRightIcon />
+                    </button>
+
+                    {modalita === null && (
+                      <div className="mt-4">
+                        <label className="block text-sm mb-2">Numero di giocatori (escluso l'organizzatore):</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={numeroGiocatori}
+                          onChange={(e) => setNumeroGiocatori(parseInt(e.target.value) || 2)}
+                          className="w-full p-2 rounded bg-white/20 border border-white/30 text-white"
+                        />
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <>
-                    <input
-                      type="text"
-                      value={tentativoCorrente}
-                      onChange={(e) => setTentativoCorrente(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && gestisciTentativo()}
-                      placeholder={modalita === 'amici' ? `Giocatore ${giocatore}, inserisci una parola...` : 'Inserisci una parola...'}
-                      className="w-full p-3 rounded-lg bg-white/20 border border-white/30 placeholder-white/50 mb-3 text-white"
-                    />
-                    <button
-                      onClick={gestisciTentativo}
-                      className="w-full bg-green-500 hover:bg-green-600 p-3 rounded-lg font-semibold transition-colors"
-                    >
-                      Prova questa parola
-                    </button>
-                  </>
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-xl font-semibold">
+                        {modalita === 'computer' ? '🤖 Contro il Computer' : '👥 Con Amici'}
+                      </h2>
+                      <button
+                        onClick={resetGioco}
+                        className="bg-red-500 hover:bg-red-600 p-2 rounded-lg transition-colors"
+                      >
+                        <RefreshIcon />
+                      </button>
+                    </div>
+
+                    {!vittoria && (
+                      <div className="mb-6 p-4 bg-white/10 rounded-lg">
+                        <p className="text-sm mb-2">La parola è compresa tra:</p>
+                        <p className="text-xl font-bold text-yellow-300">
+                          "{limiteInferiore}" e "{limiteSuperiore}"
+                        </p>
+                      </div>
+                    )}
+
+                    {messaggio && (
+                      <div className={`mb-4 p-3 rounded-lg ${vittoria ? 'bg-green-500/30' : 'bg-blue-500/30'}`}>
+                        <p className="text-center">{messaggio}</p>
+                      </div>
+                    )}
+
+                    {!vittoria && (
+                      <div className="mb-6">
+                        {modalita === 'amici' && turnoOrganizzatore ? (
+                          <>
+                            <input
+                              type="password"
+                              value={tentativoCorrente}
+                              onChange={(e) => setTentativoCorrente(e.target.value)}
+                              onKeyPress={(e) => e.key === 'Enter' && impostaParolaSegreta()}
+                              placeholder="Inserisci la parola segreta..."
+                              className="w-full p-3 rounded-lg bg-white/20 border border-white/30 placeholder-white/50 mb-3 text-white"
+                            />
+                            <button
+                              onClick={impostaParolaSegreta}
+                              className="w-full bg-purple-500 hover:bg-purple-600 p-3 rounded-lg font-semibold transition-colors"
+                            >
+                              Imposta Parola Segreta
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <input
+                              type="text"
+                              value={tentativoCorrente}
+                              onChange={(e) => setTentativoCorrente(e.target.value)}
+                              onKeyPress={(e) => e.key === 'Enter' && gestisciTentativo()}
+                              placeholder={modalita === 'amici' ? `Giocatore ${giocatore}, inserisci una parola...` : 'Inserisci una parola...'}
+                              className="w-full p-3 rounded-lg bg-white/20 border border-white/30 placeholder-white/50 mb-3 text-white"
+                            />
+                            <button
+                              onClick={gestisciTentativo}
+                              className="w-full bg-green-500 hover:bg-green-600 p-3 rounded-lg font-semibold transition-colors"
+                            >
+                              Prova questa parola
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {storicotentative.length > 0 && (
+                      <div className="mt-6">
+                        <h3 className="text-lg font-semibold mb-3">Storico tentativi:</h3>
+                        <div className="max-h-64 overflow-y-auto space-y-2">
+                          {storicotentative.map((tent, index) => (
+                            <div key={index} className="bg-white/10 p-2 rounded-lg text-sm">
+                              <span className="font-semibold">{tent.giocatore}:</span> "{tent.tentativo}" → {tent.risultato}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {vittoria && (
+                      <button
+                        onClick={modalita === 'computer' ? iniziaGiocoComputer : iniziaGiocoAmici}
+                        className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-black p-3 rounded-lg font-semibold transition-colors"
+                      >
+                        Gioca ancora!
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+            </div>
+          );
+        };
 
-            {storicotentative.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-3">Storico tentativi:</h3>
-                <div className="max-h-64 overflow-y-auto space-y-2">
-                  {storicotentative.map((tent, index) => (
-                    <div key={index} className="bg-white/10 p-2 rounded-lg text-sm">
-                      <span className="font-semibold">{tent.giocatore}:</span> "{tent.tentativo}" → {tent.risultato}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {vittoria && (
-              <button
-                onClick={modalita === 'computer' ? iniziaGiocoComputer : iniziaGiocoAmici}
-                className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-black p-3 rounded-lg font-semibold transition-colors"
-              >
-                Gioca ancora!
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default AbacoZuzzurellone;
+        // Render dell'app
+        ReactDOM.render(<AbacoZuzzurellone />, document.getElementById('root'));
     </script>
 </body>
 </html>
