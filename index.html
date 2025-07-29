@@ -6,8 +6,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Abaco Zuzzurellone</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -15,9 +15,8 @@
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
-        const { ChevronRight, Users, Smartphone, RefreshCw, AlertCircle, Loader } = lucide;
 
-        const AbacoZuzzurellone = () => {
+        function AbacoZuzzurellone() {
           const [modalita, setModalita] = useState(null);
           const [parolaSegreta, setParolaSegreta] = useState('');
           const [limiteInferiore, setLimiteInferiore] = useState('abaco');
@@ -41,9 +40,9 @@
                    parolaNormalizzata <= 'zuzzurellone';
           };
 
-          // Simula il caricamento del dizionario all'avvio dell'app
+          // Carica il dizionario all'avvio
           useEffect(() => {
-            // Usa dizionario demo
+            // Dizionario demo con 20 parole
             const dizionarioDemo = [
               'abaco', 'albero', 'amore', 'barca', 'casa',
               'dolce', 'fiore', 'gatto', 'libro', 'mare',
@@ -56,7 +55,7 @@
             setMessaggio('Modalità demo: 20 parole disponibili');
           }, []);
 
-          // Funzione per iniziare il gioco contro il computer
+          // Inizia il gioco contro il computer
           const iniziaGiocoComputer = () => {
             const parolaRandom = dizionario[Math.floor(Math.random() * dizionario.length)];
             setParolaSegreta(parolaRandom);
@@ -68,7 +67,7 @@
             setMessaggio('Ho scelto una parola. Prova a indovinarla!');
           };
 
-          // Funzione per iniziare il gioco con amici
+          // Inizia il gioco con amici
           const iniziaGiocoAmici = () => {
             setModalita('amici');
             setTurnoOrganizzatore(true);
@@ -80,7 +79,7 @@
             setMessaggio('Organizzatore: inserisci la parola segreta');
           };
 
-          // Funzione per gestire il tentativo
+          // Gestisce il tentativo
           const gestisciTentativo = () => {
             const tentativo = tentativoCorrente.trim().toLowerCase();
             
@@ -139,7 +138,7 @@
             setTentativoCorrente('');
           };
 
-          // Funzione per impostare la parola segreta (modalità amici)
+          // Imposta la parola segreta (modalità amici)
           const impostaParolaSegreta = () => {
             const parola = tentativoCorrente.trim().toLowerCase();
             
@@ -159,7 +158,7 @@
             setMessaggio(`Parola segreta impostata! Turno del giocatore 1`);
           };
 
-          // Funzione per resettare il gioco
+          // Resetta il gioco
           const resetGioco = () => {
             setModalita(null);
             setParolaSegreta('');
@@ -173,13 +172,6 @@
             setVittoria(false);
           };
 
-          // Icone (uso emoji come fallback)
-          const ChevronRightIcon = () => <span>›</span>;
-          const SmartphoneIcon = () => <span>📱</span>;
-          const UsersIcon = () => <span>👥</span>;
-          const RefreshIcon = () => <span>🔄</span>;
-          const LoaderIcon = () => <span>⏳</span>;
-
           return (
             <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4">
               <div className="max-w-md mx-auto">
@@ -189,7 +181,7 @@
 
                 {caricamentoDizionario ? (
                   <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl text-center">
-                    <LoaderIcon />
+                    <p className="text-2xl mb-4">⏳</p>
                     <p>Caricamento dizionario...</p>
                   </div>
                 ) : !modalita ? (
@@ -204,39 +196,37 @@
 
                     <button
                       onClick={iniziaGiocoComputer}
-                      className="w-full mb-4 bg-blue-500 hover:bg-blue-600 p-4 rounded-lg flex items-center justify-between transition-all transform hover:scale-105"
+                      className="w-full mb-4 bg-blue-500 hover:bg-blue-600 p-4 rounded-lg flex items-center justify-between transition-all"
                     >
                       <div className="flex items-center">
-                        <SmartphoneIcon />
-                        <span className="text-lg font-semibold ml-3">Gioca contro il Computer</span>
+                        <span className="mr-3 text-2xl">📱</span>
+                        <span className="text-lg font-semibold">Gioca contro il Computer</span>
                       </div>
-                      <ChevronRightIcon />
+                      <span className="text-2xl">›</span>
                     </button>
 
                     <button
                       onClick={iniziaGiocoAmici}
-                      className="w-full bg-green-500 hover:bg-green-600 p-4 rounded-lg flex items-center justify-between transition-all transform hover:scale-105"
+                      className="w-full bg-green-500 hover:bg-green-600 p-4 rounded-lg flex items-center justify-between transition-all"
                     >
                       <div className="flex items-center">
-                        <UsersIcon />
-                        <span className="text-lg font-semibold ml-3">Gioca con Amici</span>
+                        <span className="mr-3 text-2xl">👥</span>
+                        <span className="text-lg font-semibold">Gioca con Amici</span>
                       </div>
-                      <ChevronRightIcon />
+                      <span className="text-2xl">›</span>
                     </button>
 
-                    {modalita === null && (
-                      <div className="mt-4">
-                        <label className="block text-sm mb-2">Numero di giocatori (escluso l'organizzatore):</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={numeroGiocatori}
-                          onChange={(e) => setNumeroGiocatori(parseInt(e.target.value) || 2)}
-                          className="w-full p-2 rounded bg-white/20 border border-white/30 text-white"
-                        />
-                      </div>
-                    )}
+                    <div className="mt-4">
+                      <label className="block text-sm mb-2">Numero di giocatori (escluso l'organizzatore):</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={numeroGiocatori}
+                        onChange={(e) => setNumeroGiocatori(parseInt(e.target.value) || 2)}
+                        className="w-full p-2 rounded bg-white/20 border border-white/30 text-white"
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
@@ -246,9 +236,9 @@
                       </h2>
                       <button
                         onClick={resetGioco}
-                        className="bg-red-500 hover:bg-red-600 p-2 rounded-lg transition-colors"
+                        className="bg-red-500 hover:bg-red-600 p-2 rounded-lg transition-colors text-xl"
                       >
-                        <RefreshIcon />
+                        🔄
                       </button>
                     </div>
 
@@ -333,10 +323,10 @@
               </div>
             </div>
           );
-        };
+        }
 
-        // Render dell'app
-        ReactDOM.render(<AbacoZuzzurellone />, document.getElementById('root'));
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<AbacoZuzzurellone />);
     </script>
 </body>
 </html>
