@@ -378,16 +378,35 @@
                     </button>
 
                     <div className="mt-4">
-                      <label className="block text-sm mb-2">Numero di giocatori (escluso l'organizzatore):</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={numeroGiocatori}
-                        onChange={(e) => setNumeroGiocatori(parseInt(e.target.value) || 2)}
-                        className="w-full p-2 rounded bg-white/20 border border-white/30 text-white"
-                      />
-                    </div>
+  <label className="block text-sm mb-2">Numero di giocatori (escluso l'organizzatore):</label>
+  <input
+    type="number"
+    inputMode="numeric"
+    pattern="[0-9]*"
+    min="1"
+    max="100"
+    value={numeroGiocatori}
+    onChange={(e) => {
+      const value = e.target.value;
+      // Permetti campo vuoto durante la digitazione
+      if (value === '') {
+        setNumeroGiocatori('');
+      } else {
+        const num = parseInt(value);
+        if (!isNaN(num) && num >= 1 && num <= 100) {
+          setNumeroGiocatori(num);
+        }
+      }
+    }}
+    onBlur={(e) => {
+      // Se il campo è vuoto quando perde il focus, ripristina 2
+      if (e.target.value === '' || parseInt(e.target.value) < 1) {
+        setNumeroGiocatori(2);
+      }
+    }}
+    className="w-full p-2 rounded bg-white/20 border border-white/30 text-white"
+  />
+</div>
                   </div>
                 ) : (
                   <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
@@ -505,3 +524,4 @@
     </script>
 </body>
 </html>
+
